@@ -18,6 +18,12 @@ enum IncidentStatus {
   verified
 }
 
+enum CheckpointStatus {
+  open
+  closed
+  restricted
+}
+
 model Incident {
   id          Int            @id @default(autoincrement())
   type        String
@@ -27,4 +33,25 @@ model Incident {
   longitude   Float
   status      IncidentStatus @default(active)
   createdAt   DateTime       @default(now())
+}
+
+model Checkpoint {
+  id         Int                @id @default(autoincrement())
+  name       String
+  latitude   Float
+  longitude  Float
+  status     CheckpointStatus   @default(open)
+  createdAt  DateTime           @default(now())
+  histories  CheckpointHistory[]
+}
+
+model CheckpointHistory {
+  id            Int               @id @default(autoincrement())
+  checkpointId  Int
+  status        CheckpointStatus
+  createdAt     DateTime          @default(now())
+
+  checkpoint Checkpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
+
+  @@index([checkpointId])
 }
