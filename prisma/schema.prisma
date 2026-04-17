@@ -24,6 +24,17 @@ enum CheckpointStatus {
   restricted
 }
 
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
 model Incident {
   id          Int            @id @default(autoincrement())
   type        String
@@ -54,4 +65,40 @@ model CheckpointHistory {
   checkpoint Checkpoint @relation(fields: [checkpointId], references: [id], onDelete: Cascade)
 
   @@index([checkpointId])
+}
+
+model Report {
+  id          Int            @id @default(autoincrement())
+  latitude    Float
+  longitude   Float
+  category    String
+  description String
+  status      ReportStatus   @default(PENDING)
+  createdAt   DateTime       @default(now())
+
+  audits ReportAudit[]
+  votes  ReportVote[]
+}
+
+model ReportAudit {
+  id       Int      @id @default(autoincrement())
+  reportId Int
+  action   String
+  role     String
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@index([reportId])
+}
+
+model ReportVote {
+  id       Int      @id @default(autoincrement())
+  reportId Int
+  voteType VoteType
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@index([reportId])
 }
