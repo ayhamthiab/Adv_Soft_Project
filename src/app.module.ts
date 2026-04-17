@@ -5,9 +5,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { IncidentsModule } from './incidents/incidents.module';
 import { CheckpointsModule } from './checkpoints/checkpoints.module';
 import { ReportsModule } from './reports/reports.module';
+import { RoutesModule } from './routes/routes.module';
 
 @Module({
-  imports: [PrismaModule, IncidentsModule, CheckpointsModule, ReportsModule],
+  imports: [PrismaModule, IncidentsModule, CheckpointsModule, ReportsModule, RoutesModule],
   controllers: [AppController],
   providers: [AppService],
 })
