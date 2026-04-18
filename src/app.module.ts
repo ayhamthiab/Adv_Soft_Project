@@ -6,6 +6,7 @@ import { IncidentsModule } from './incidents/incidents.module';
 import { CheckpointsModule } from './checkpoints/checkpoints.module';
 import { ReportsModule } from './reports/reports.module';
 import { AlertsModule } from './alerts/alerts.module';
+import { RoutesModule } from './routes/routes.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AlertsModule } from './alerts/alerts.module';
     CheckpointsModule,
     ReportsModule,
     AlertsModule,
+    RoutesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
