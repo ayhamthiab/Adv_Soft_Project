@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsIn,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCheckpointDto {

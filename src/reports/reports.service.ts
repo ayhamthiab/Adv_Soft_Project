@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Prisma, Report } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -160,7 +165,10 @@ export class ReportsService {
 
       return updatedReport;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Failed to approve report');
@@ -192,14 +200,19 @@ export class ReportsService {
 
       return updatedReport;
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Failed to reject report');
     }
   }
 
-  private async findDuplicate(createReportDto: CreateReportDto): Promise<Report | null> {
+  private async findDuplicate(
+    createReportDto: CreateReportDto,
+  ): Promise<Report | null> {
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
 
     const reports = await this.prisma.report.findMany({
@@ -219,7 +232,8 @@ export class ReportsService {
         report.longitude,
       );
 
-      if (distance <= 200) { // 200 meters
+      if (distance <= 200) {
+        // 200 meters
         return report;
       }
     }
@@ -227,7 +241,12 @@ export class ReportsService {
     return null;
   }
 
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371e3; // Earth's radius in meters
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
@@ -242,13 +261,19 @@ export class ReportsService {
     return R * c;
   }
 
-  private parsePaginationParams(query: QueryReportDto): { page: number; limit: number } {
+  private parsePaginationParams(query: QueryReportDto): {
+    page: number;
+    limit: number;
+  } {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     return { page, limit };
   }
 
-  private validateSortParams(query: QueryReportDto): { sortField: string; sortOrder: string } {
+  private validateSortParams(query: QueryReportDto): {
+    sortField: string;
+    sortOrder: string;
+  } {
     const sortField = query.sort ?? 'createdAt';
     const sortOrder = query.order ?? 'desc';
 
@@ -277,8 +302,10 @@ export class ReportsService {
     return where;
   }
 
-  private async addVoteCountsToReports(reports: Report[]): Promise<ReportWithVotes[]> {
-    const reportIds = reports.map(r => r.id);
+  private async addVoteCountsToReports(
+    reports: Report[],
+  ): Promise<ReportWithVotes[]> {
+    const reportIds = reports.map((r) => r.id);
 
     const voteCounts = await this.prisma.reportVote.groupBy({
       by: ['reportId', 'voteType'],
@@ -306,7 +333,7 @@ export class ReportsService {
       }
     }
 
-    return reports.map(report => {
+    return reports.map((report) => {
       const votes = voteMap.get(report.id) || { upvotes: 0, downvotes: 0 };
       return {
         ...report,

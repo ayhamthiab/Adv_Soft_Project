@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 export type UserRole = 'admin' | 'moderator' | 'user';
@@ -12,10 +17,15 @@ export class RoleGuard implements CanActivate {
     const userRole = request.headers['x-user-role'] as UserRole;
 
     if (!userRole) {
-      throw new ForbiddenException('User role not specified in x-user-role header');
+      throw new ForbiddenException(
+        'User role not specified in x-user-role header',
+      );
     }
 
-    const allowedRoles = this.reflector.get<UserRole[]>('roles', context.getHandler());
+    const allowedRoles = this.reflector.get<UserRole[]>(
+      'roles',
+      context.getHandler(),
+    );
     if (!allowedRoles) {
       return true; // No roles specified, allow access
     }

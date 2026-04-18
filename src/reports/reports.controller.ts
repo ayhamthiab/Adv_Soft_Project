@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, ParseIntPipe, UsePipes, ValidationPipe, UseGuards, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  ParseIntPipe,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { QueryReportDto } from './dto/query-report.dto';
@@ -28,21 +41,30 @@ export class ReportsController {
   }
 
   @Post(':id/vote')
-  vote(@Param('id', ParseIntPipe) id: number, @Body() voteReportDto: VoteReportDto) {
+  vote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() voteReportDto: VoteReportDto,
+  ) {
     return this.reportsService.vote(id, voteReportDto);
   }
 
   @Patch(':id/approve')
   @UseGuards(RoleGuard)
   @Roles('admin', 'moderator')
-  approve(@Param('id', ParseIntPipe) id: number, @Headers('x-user-role') role: string) {
+  approve(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('x-user-role') role: string,
+  ) {
     return this.reportsService.approve(id, role);
   }
 
   @Patch(':id/reject')
   @UseGuards(RoleGuard)
   @Roles('admin', 'moderator')
-  reject(@Param('id', ParseIntPipe) id: number, @Headers('x-user-role') role: string) {
+  reject(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('x-user-role') role: string,
+  ) {
     return this.reportsService.reject(id, role);
   }
 }

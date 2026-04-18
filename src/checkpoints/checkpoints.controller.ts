@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseIntPipe,
+  UsePipes,
+  ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { CheckpointsService } from './checkpoints.service';
 import { CreateCheckpointDto } from './dto/create-checkpoint.dto';
 import { UpdateCheckpointDto } from './dto/update-checkpoint.dto';
@@ -20,7 +33,9 @@ export class CheckpointsController {
   }
 
   @Get()
-  findAll(@Query() query: QueryCheckpointDto): Promise<FindAllCheckpointsResponse> {
+  findAll(
+    @Query() query: QueryCheckpointDto,
+  ): Promise<FindAllCheckpointsResponse> {
     return this.checkpointsService.findAll(query);
   }
 
@@ -30,14 +45,19 @@ export class CheckpointsController {
   }
 
   @Get(':id/history')
-  getCheckpointHistory(@Param('id', ParseIntPipe) id: number): Promise<CheckpointHistoryResponse> {
+  getCheckpointHistory(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CheckpointHistoryResponse> {
     return this.checkpointsService.getCheckpointHistory(id);
   }
 
   @Patch(':id')
   @UseGuards(RoleGuard)
   @Roles('admin', 'moderator')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateCheckpointDto: UpdateCheckpointDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCheckpointDto: UpdateCheckpointDto,
+  ) {
     return this.checkpointsService.update(id, updateCheckpointDto);
   }
 
