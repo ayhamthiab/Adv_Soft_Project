@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Prisma, Incident } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AlertsService } from '../alerts/alerts.service';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentDto } from './dto/update-incident.dto';
 import { QueryIncidentDto } from './dto/query-incident.dto';
@@ -11,7 +17,10 @@ export class IncidentsService {
   private readonly ALLOWED_SORT_FIELDS = ['createdAt', 'severity'];
   private readonly ALLOWED_SORT_ORDERS = ['asc', 'desc'];
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly alertsService: AlertsService,
+  ) {}
 
   async create(createIncidentDto: CreateIncidentDto): Promise<Incident> {
     try {
@@ -96,7 +105,10 @@ export class IncidentsService {
     }
   }
 
-  async update(id: number, updateIncidentDto: UpdateIncidentDto): Promise<Incident> {
+  async update(
+    id: number,
+    updateIncidentDto: UpdateIncidentDto,
+  ): Promise<Incident> {
     try {
       if (Object.keys(updateIncidentDto).length === 0) {
         throw new BadRequestException('No fields provided to update');
@@ -114,7 +126,10 @@ export class IncidentsService {
           throw new NotFoundException(`Incident with ID ${id} not found`);
         }
       }
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Failed to update incident');
@@ -135,12 +150,20 @@ export class IncidentsService {
         throw new BadRequestException('Only active incidents can be verified');
       }
 
-      return await this.prisma.incident.update({
+      const verifiedIncident = await this.prisma.incident.update({
         where: { id },
         data: { status: 'verified' as any },
       });
+
+      // Generate alerts for the verified incident
+      await this.alertsService.generateAlertsForIncident(id);
+
+      return verifiedIncident;
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Failed to verify incident');
@@ -158,7 +181,9 @@ export class IncidentsService {
       }
 
       if (incident.status !== 'active' && incident.status !== 'verified') {
-        throw new BadRequestException('Only active or verified incidents can be closed');
+        throw new BadRequestException(
+          'Only active or verified incidents can be closed',
+        );
       }
 
       return await this.prisma.incident.update({
@@ -166,7 +191,10 @@ export class IncidentsService {
         data: { status: 'closed' as any },
       });
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Failed to close incident');
@@ -190,7 +218,11 @@ export class IncidentsService {
     }
   }
 
-  private parsePaginationParams(query: QueryIncidentDto): { page: number; limit: number; offset: number } {
+  private parsePaginationParams(query: QueryIncidentDto): {
+    page: number;
+    limit: number;
+    offset: number;
+  } {
     const page = Math.max(query.page ?? 1, 1);
     const limit = Math.min(Math.max(query.limit ?? 20, 1), 100);
     const offset = (page - 1) * limit;
@@ -198,7 +230,10 @@ export class IncidentsService {
     return { page, limit, offset };
   }
 
-  private validateSortParams(query: QueryIncidentDto): { sortField: string; sortOrder: 'asc' | 'desc' } {
+  private validateSortParams(query: QueryIncidentDto): {
+    sortField: string;
+    sortOrder: 'asc' | 'desc';
+  } {
     const sortField = query.sort ?? 'createdAt';
     const sortOrder = (query.order ?? 'desc').toLowerCase() as 'asc' | 'desc';
 
@@ -209,16 +244,22 @@ export class IncidentsService {
     }
 
     if (!this.ALLOWED_SORT_ORDERS.includes(sortOrder)) {
-      throw new BadRequestException(`Invalid sort order. Allowed values: ${this.ALLOWED_SORT_ORDERS.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid sort order. Allowed values: ${this.ALLOWED_SORT_ORDERS.join(', ')}`,
+      );
     }
 
     return { sortField, sortOrder };
   }
 
-  private buildWhereConditions(query: QueryIncidentDto): Prisma.IncidentWhereInput {
+  private buildWhereConditions(
+    query: QueryIncidentDto,
+  ): Prisma.IncidentWhereInput {
     return {
       ...(query.type ? { type: query.type } : {}),
-      ...(typeof query.severity === 'number' ? { severity: query.severity } : {}),
+      ...(typeof query.severity === 'number'
+        ? { severity: query.severity }
+        : {}),
       ...(query.status ? { status: query.status as any } : {}),
     };
   }

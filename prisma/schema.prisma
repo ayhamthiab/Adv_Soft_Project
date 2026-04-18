@@ -102,3 +102,22 @@ model ReportVote {
 
   @@index([reportId])
 }
+
+model AlertSubscription {
+  id        Int      @id @default(autoincrement())
+  latitude  Float
+  longitude Float
+  radius    Float
+  category  String?
+  createdAt DateTime @default(now())
+}
+
+model Alert {
+  id             Int      @id @default(autoincrement())
+  incidentId     Int
+  subscriptionId Int
+  createdAt      DateTime @default(now())
+
+  @@index([incidentId])
+  @@index([subscriptionId])
+}
