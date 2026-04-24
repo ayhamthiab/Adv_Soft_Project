@@ -1,98 +1,366 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# WASEL Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Project Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+WASEL is a NestJS backend service for incident reporting, checkpoint management, alert subscriptions, and route estimation. It supports traffic-awareness and emergency-response workflows by combining local database records with external routing and weather data.
 
-## Description
+The backend is implemented using:
+- NestJS modular architecture
+- Prisma ORM with PostgreSQL
+- DTO-based request validation
+- Role-based guards for protected operations
+- External routing and weather APIs for route estimation
+- Performance testing with k6
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## System Overview
 
-## Project setup
+The application is organized by domain modules:
 
-```bash
-$ npm install
+- `IncidentsModule`: handles incident lifecycle, status changes, and retrieval
+- `ReportsModule`: handles report submission, voting, approval, and audit logging
+- `CheckpointsModule`: handles checkpoint creation, updates, deletion, and history
+- `RoutesModule`: provides route estimates using external APIs plus local impact factors
+- `AlertsModule`: manages alert subscriptions and alert queries
+- `PrismaModule`: provides shared database access across modules
+
+The API is exposed under a global prefix configured in `src/main.ts`:
+
+- Base path: `/api/v1`
+
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+  App["NestJS Application"]
+  App --> PrismaModule["PrismaModule\n(Prisma Client)"]
+  App --> IncidentsModule
+  App --> ReportsModule
+  App --> CheckpointsModule
+  App --> RoutesModule
+  App --> AlertsModule
+
+  IncidentsModule --> IncidentsController
+  IncidentsModule --> IncidentsService
+
+  ReportsModule --> ReportsController
+  ReportsModule --> ReportsService
+
+  CheckpointsModule --> CheckpointsController
+  CheckpointsModule --> CheckpointsService
+
+  RoutesModule --> RoutesController
+  RoutesModule --> RoutesService
+  RoutesService --> ExternalRoutingService
+  RoutesService --> WeatherService
+
+  AlertsModule --> AlertsController
+  AlertsModule --> AlertsService
+
+  PrismaModule --> PrismaService
+  IncidentsService --> PrismaService
+  ReportsService --> PrismaService
+  CheckpointsService --> PrismaService
+  RoutesService --> PrismaService
+  AlertsService --> PrismaService
+
+  ExternalRoutingService --> OSRM["OSRM Routing API"]
+  WeatherService --> OpenMeteo["Open-Meteo Weather API"]
+  PrismaService --> Postgres["PostgreSQL Database"]
 ```
 
-## Compile and run the project
+## Database Schema (ERD)
 
-```bash
-# development
-$ npm run start
+The data model is defined in `prisma/schema.prisma` and includes these main entities:
 
-# watch mode
-$ npm run start:dev
+```mermaid
+erDiagram
+    INCIDENT {
+      Int id PK
+      String type
+      Int severity
+      String description
+      Float latitude
+      Float longitude
+      IncidentStatus status
+      DateTime createdAt
+    }
 
-# production mode
-$ npm run start:prod
+    CHECKPOINT {
+      Int id PK
+      String name
+      Float latitude
+      Float longitude
+      CheckpointStatus status
+      DateTime createdAt
+    }
+
+    CHECKPOINT_HISTORY {
+      Int id PK
+      Int checkpointId FK
+      CheckpointStatus status
+      DateTime createdAt
+    }
+
+    REPORT {
+      Int id PK
+      Float latitude
+      Float longitude
+      String category
+      String description
+      ReportStatus status
+      DateTime createdAt
+    }
+
+    REPORT_AUDIT {
+      Int id PK
+      Int reportId FK
+      String action
+      String role
+      DateTime createdAt
+    }
+
+    REPORT_VOTE {
+      Int id PK
+      Int reportId FK
+      VoteType voteType
+      DateTime createdAt
+    }
+
+    ALERT_SUBSCRIPTION {
+      Int id PK
+      Float latitude
+      Float longitude
+      Float radius
+      String category
+      DateTime createdAt
+    }
+
+    ALERT {
+      Int id PK
+      Int incidentId FK
+      Int subscriptionId FK
+      DateTime createdAt
+    }
+
+    INCIDENT ||--o{ ALERT : generates
+    CHECKPOINT ||--o{ CHECKPOINT_HISTORY : history_of
+    REPORT ||--o{ REPORT_AUDIT : audited_by
+    REPORT ||--o{ REPORT_VOTE : voted_by
+    ALERT_SUBSCRIPTION ||--o{ ALERT : matches
 ```
 
-## Run tests
+### Entity Summary
+
+- **Incident**: Stores active incidents, location, severity, and current status.
+- **Checkpoint**: Stores checkpoint location, name, and status.
+- **CheckpointHistory**: Records historical status transitions.
+- **Report**: Stores user-submitted reports and approval status.
+- **ReportAudit**: Logs admin/moderator approval or rejection actions.
+- **ReportVote**: Stores report votes and supports popularity scoring.
+- **AlertSubscription**: Stores area subscriptions for alerts.
+- **Alert**: Connects incidents to subscription alerts.
+
+## API Design Rationale
+
+The API follows RESTful principles with a modular architecture:
+
+- Clear, versioned base path: `/api/v1`
+- Resource-oriented paths for each domain
+- Consistent use of HTTP verbs: `GET` for reads, `POST` for creation/actions, `PATCH` for updates, `DELETE` for removal
+- Strong request validation through NestJS DTOs and global `ValidationPipe`
+- Role-based guard enforcement for admin/moderator-only actions
+
+### Primary Endpoints
+
+- `POST /api/v1/incidents` — create a new incident (protected)
+- `GET /api/v1/incidents` — list incidents with filtering and pagination
+- `GET /api/v1/incidents/:id` — retrieve a single incident
+- `PATCH /api/v1/incidents/:id` — update an incident (protected)
+- `PATCH /api/v1/incidents/:id/verify` — verify an incident (protected)
+- `PATCH /api/v1/incidents/:id/close` — close an incident (protected)
+- `DELETE /api/v1/incidents/:id` — remove an incident (protected)
+
+- `POST /api/v1/reports` — submit a report
+- `GET /api/v1/reports` — retrieve report listings
+- `GET /api/v1/reports/:id` — retrieve a report with vote counts
+- `POST /api/v1/reports/:id/vote` — vote on a report
+- `PATCH /api/v1/reports/:id/approve` — approve a report (protected)
+- `PATCH /api/v1/reports/:id/reject` — reject a report (protected)
+
+- `POST /api/v1/checkpoints` — create a checkpoint (protected)
+- `GET /api/v1/checkpoints` — list checkpoints
+- `GET /api/v1/checkpoints/:id` — retrieve checkpoint details
+- `GET /api/v1/checkpoints/:id/history` — retrieve checkpoint history
+- `PATCH /api/v1/checkpoints/:id` — update a checkpoint (protected)
+- `DELETE /api/v1/checkpoints/:id` — delete a checkpoint (protected)
+
+- `GET /api/v1/routes/estimate` — estimate route distance, duration, and delay factors
+
+- `POST /api/v1/alerts/subscriptions` — create alert subscription
+- `GET /api/v1/alerts/subscriptions` — list subscriptions
+- `GET /api/v1/alerts` — query alerts
+
+## External API Integration Details
+
+The route estimation flow combines local state with external APIs.
+
+### OSRM Routing API
+
+- Uses `http://router.project-osrm.org/route/v1/driving/...`
+- Retrieves base distance and duration for route segments
+- Has a 3-second timeout to avoid blocking route responses
+- Falls back to internal distance and duration calculations when unavailable
+
+### Open-Meteo Weather API
+
+- Uses `https://api.open-meteo.com/v1/forecast` with current weather
+- Maps weather codes to conditions such as `clear`, `rain`, `snow`, `storm`, and `cloudy`
+- Applies weather impact scoring to route estimates
+- Uses fallback logic when weather data cannot be retrieved
+
+### Route Risk Calculation
+
+Route estimates are enriched by:
+- local incident density along the route
+- nearby checkpoints along the route
+- external routing duration
+- weather impact scores
+
+This layered approach ensures route results blend external guidance with local situational awareness.
+
+## Testing Strategy
+
+### Unit Tests
+
+- Uses Jest for service, controller, and guard unit tests
+- Tests should verify domain logic, validation rules, and error handling
+- Run with:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run test
 ```
 
-## Deployment
+### End-to-End Tests
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Uses NestJS test utilities and SuperTest for full integration coverage
+- Verifies the full request lifecycle from incoming HTTP request to database persistence
+- Run with:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run test:e2e
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Validation
 
-## Resources
+- Global `ValidationPipe` in `src/main.ts` enforces DTO contracts
+- This prevents malformed requests and unknown payload fields
 
-Check out a few resources that may come in handy when working with NestJS:
+### Performance Testing
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Load tests live in `performance-tests/`
+- Built with k6
+- Designed to measure read-heavy, write-heavy, mixed load, spike, and soak behavior
 
-## Support
+## Performance Testing Results
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Read-Heavy
 
-## Stay in touch
+- Load: 100 VUs over 5 minutes
+- Checks: 100% succeeded
+- p95 latency: ~1.64ms
+- Average duration: ~1.12ms
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Write-Heavy
 
-## License
+- Load: 50 VUs over 3 minutes
+- Checks: 100% succeeded
+- p95 latency: ~21.95ms
+- Average duration: ~16.09ms
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Mixed Load
+
+- Load: 200 VUs over 5 minutes
+- Check success: 95.14%
+- Threshold breach: route estimates exceeded 800ms for some requests
+- p95 latency: ~3.08s
+- This indicates external route/weather integration is the main stress point under mixed load
+
+### Spike Test
+
+- Load: up to 500 VUs over 30 seconds
+- Checks: 100% succeeded
+- p95 latency: ~1.59s
+- The system handled sudden load spikes without failed checks
+
+### Soak Test
+
+- Load: 50 VUs over ~60 minutes
+- Checks: 99.98% succeeded
+- p95 latency: ~2ms
+- 68 request failures out of 179,850 total requests, showing strong long-term stability
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ or later
+- PostgreSQL
+- npm
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Database Setup
+
+Set `DATABASE_URL` in `.env`, then run:
+
+```bash
+npx prisma generate
+```
+
+### Start Development Server
+
+```bash
+npm run start:dev
+```
+
+The backend will be available at:
+
+```text
+http://localhost:3000/api/v1
+```
+
+### Run a Performance Test
+
+```bash
+cd performance-tests
+k6 run read-heavy.js
+```
+
+## Project Structure
+
+- `src/app.module.ts` — application root and module composition
+- `src/main.ts` — startup, global API prefix, and global validation
+- `src/prisma` — Prisma module and database service
+- `src/incidents` — incident endpoints, service, DTOs, types
+- `src/reports` — report workflows and audit/vote handling
+- `src/checkpoints` — checkpoint CRUD and history tracking
+- `src/routes` — route estimation and external integrations
+- `src/alerts` — alert subscription and retrieval
+- `src/guards` — role-based authorization
+- `src/decorators` — role metadata helper
+
+## Future Improvements
+
+- Add authentication and JWT-based authorization
+- Replace header-based role access with secure identity management
+- Cache external API responses for routing and weather data
+- Add retry and circuit breaker handling for external providers
+- Build migrations and seed data for repeatable local development
+
+---
+
+*This README documents the WASEL backend system architecture, database schema, API design, external integrations, testing regimen, and performance profile.*
