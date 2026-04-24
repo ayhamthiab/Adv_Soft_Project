@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:ayham123@db:5432/wasel_db"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npx prisma migrate deploy && npm run start:dev"
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ayham123
+      POSTGRES_DB: wasel_db
+    ports:
+      - "5433:5432"
