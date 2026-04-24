@@ -68,6 +68,8 @@ flowchart TB
   PrismaService --> Postgres["PostgreSQL Database"]
 ```
 
+The architecture follows a layered design: controllers receive HTTP requests and delegate to services, services apply business logic and call Prisma for data access, and Prisma communicates with the database. The modular design keeps each feature isolated and reusable while preserving a clear separation of concerns.
+
 ## Database Schema (ERD)
 
 The data model is defined in `prisma/schema.prisma` and includes these main entities:
@@ -228,6 +230,8 @@ Route estimates are enriched by:
 
 This layered approach ensures route results blend external guidance with local situational awareness.
 
+The core system is designed to work without external APIs; routing and weather providers are used only to enhance route estimation and user experience.
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -260,6 +264,8 @@ npm run test:e2e
 - Load tests live in `performance-tests/`
 - Built with k6
 - Designed to measure read-heavy, write-heavy, mixed load, spike, and soak behavior
+
+Testing in this project ensures correctness, reliability, and performance across the backend implementation.
 
 ## Performance Testing Results
 
@@ -298,6 +304,15 @@ npm run test:e2e
 - Checks: 99.98% succeeded
 - p95 latency: ~2ms
 - 68 request failures out of 179,850 total requests, showing strong long-term stability
+
+## Docker Deployment
+
+A Docker Compose setup can be used to run the app and database together in a consistent environment. The Compose configuration should define two services:
+
+- `app`: the NestJS application container
+- `db`: a PostgreSQL database container
+
+These services communicate internally over Docker networking using `db:5432`, while the application remains accessible externally on `localhost` through the mapped port. Docker is used to provide consistency across environments, isolate dependencies, and simplify local development.
 
 ## Getting Started
 
@@ -358,6 +373,7 @@ k6 run read-heavy.js
 - Add authentication and JWT-based authorization
 - Replace header-based role access with secure identity management
 - Cache external API responses for routing and weather data
+- Add database indexing for performance
 - Add retry and circuit breaker handling for external providers
 - Build migrations and seed data for repeatable local development
 
