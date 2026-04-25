@@ -174,33 +174,40 @@ The API follows RESTful principles with a modular architecture:
 
 ### Primary Endpoints
 
-- `POST /api/v1/incidents` — create a new incident (protected)
-- `GET /api/v1/incidents` — list incidents with filtering and pagination
-- `GET /api/v1/incidents/:id` — retrieve a single incident
-- `PATCH /api/v1/incidents/:id` — update an incident (protected)
-- `PATCH /api/v1/incidents/:id/verify` — verify an incident (protected)
-- `PATCH /api/v1/incidents/:id/close` — close an incident (protected)
-- `DELETE /api/v1/incidents/:id` — remove an incident (protected)
+- `GET http://localhost:3000/api/v1` — service health / welcome message
 
-- `POST /api/v1/reports` — submit a report
-- `GET /api/v1/reports` — retrieve report listings
-- `GET /api/v1/reports/:id` — retrieve a report with vote counts
-- `POST /api/v1/reports/:id/vote` — vote on a report
-- `PATCH /api/v1/reports/:id/approve` — approve a report (protected)
-- `PATCH /api/v1/reports/:id/reject` — reject a report (protected)
+incidents:
+- `POST http://localhost:3000/api/v1/incidents` — create incident (protected)
+- `GET http://localhost:3000/api/v1/incidents` — list incidents
+- `GET http://localhost:3000/api/v1/incidents/:id` — get incident by ID
+- `PATCH http://localhost:3000/api/v1/incidents/:id` — update incident (protected)
+- `PATCH http://localhost:3000/api/v1/incidents/:id/verify` — verify incident (protected)
+- `PATCH http://localhost:3000/api/v1/incidents/:id/close` — close incident (protected)
+- `DELETE http://localhost:3000/api/v1/incidents/:id` — delete incident (protected)
 
-- `POST /api/v1/checkpoints` — create a checkpoint (protected)
-- `GET /api/v1/checkpoints` — list checkpoints
-- `GET /api/v1/checkpoints/:id` — retrieve checkpoint details
-- `GET /api/v1/checkpoints/:id/history` — retrieve checkpoint history
-- `PATCH /api/v1/checkpoints/:id` — update a checkpoint (protected)
-- `DELETE /api/v1/checkpoints/:id` — delete a checkpoint (protected)
+reports:
+- `POST http://localhost:3000/api/v1/reports` — create report
+- `GET http://localhost:3000/api/v1/reports` — list reports
+- `GET http://localhost:3000/api/v1/reports/:id` — get report by ID
+- `POST http://localhost:3000/api/v1/reports/:id/vote` — vote on a report
+- `PATCH http://localhost:3000/api/v1/reports/:id/approve` — approve report
+- `PATCH http://localhost:3000/api/v1/reports/:id/reject` — reject report
 
-- `GET /api/v1/routes/estimate` — estimate route distance, duration, and delay factors
+checkpoints:
+- `POST http://localhost:3000/api/v1/checkpoints` — create checkpoint (protected)
+- `GET http://localhost:3000/api/v1/checkpoints` — list checkpoints
+- `GET http://localhost:3000/api/v1/checkpoints/:id` — get checkpoint by ID
+- `GET http://localhost:3000/api/v1/checkpoints/:id/history` — get checkpoint history
+- `PATCH http://localhost:3000/api/v1/checkpoints/:id` — update checkpoint (protected)
+- `DELETE http://localhost:3000/api/v1/checkpoints/:id` — delete checkpoint (protected)
 
-- `POST /api/v1/alerts/subscriptions` — create alert subscription
-- `GET /api/v1/alerts/subscriptions` — list subscriptions
-- `GET /api/v1/alerts` — query alerts
+routes:
+- `GET http://localhost:3000/api/v1/routes/estimate` — estimate route
+
+alerts:
+- `POST http://localhost:3000/api/v1/alerts/subscriptions` — create subscription
+- `GET http://localhost:3000/api/v1/alerts/subscriptions` — list subscriptions
+- `GET http://localhost:3000/api/v1/alerts` — query alerts
 
 ## External API Integration Details
 
