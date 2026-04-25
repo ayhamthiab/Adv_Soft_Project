@@ -319,7 +319,7 @@ A Docker Compose setup can be used to run the app and database together in a con
 - `app`: the NestJS application container
 - `db`: a PostgreSQL database container
 
-These services communicate internally over Docker networking using `db:5432`, while the application remains accessible externally on `localhost` through the mapped port. Docker is used to provide consistency across environments, isolate dependencies, and simplify local development.
+These services communicate internally over Docker networking using `db:5433`, while the application remains accessible externally on `localhost` through the mapped port. Docker is used to provide consistency across environments, isolate dependencies, and simplify local development.
 
 ## Getting Started
 
